@@ -1,0 +1,53 @@
+﻿@page
+@{
+    ViewData["Title"] = "Cargo Tracking";
+}
+
+<h1>Cargo Tracking</h1>
+
+<div>
+    <label for="cargoId">Cargo ID:</label>
+    <input type="text" id="cargoId" placeholder="Cargo ID">
+    <label for="status">Status:</label>
+    <input type="text" id="status" placeholder="Status">
+    <button onclick="updateCargoStatus()">Update Cargo Status</button>
+</div>
+
+<h2>Real-Time Cargo Status:</h2>
+<div id="cargoStatus"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.js"></script>
+<script>
+    
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/cargoHub")
+        .build();
+
+   
+    connection.on("ReceiveCargoStatus", (cargoId, status) => {
+        const statusDiv = document.getElementById("cargoStatus");
+        statusDiv.innerHTML = `Cargo ID: ${cargoId}, Status: ${status}`;
+    });
+
+ 
+    connection.start().catch(err => console.error(err));
+
+    
+    function updateCargoStatus() {
+        const cargoId = document.getElementById("cargoId").value;
+        const status = document.getElementById("status").value;
+
+        fetch(`/Cargo/UpdateCargoStatus/${cargoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Cargo status updated:", data);
+        })
+        .catch(error => console.error("Error updating cargo status:", error));
+    }
+</script>
